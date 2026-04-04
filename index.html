@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>多人在线聊天</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+<div id="app" class="max-w-4xl mx-auto p-4">
+  <div id="auth" class="bg-white p-6 rounded-xl shadow max-w-sm mx-auto mt-10">
+    <h2 class="text-xl font-bold mb-4">登录 / 注册</h2>
+    <input id="email" type="email" placeholder="邮箱" class="w-full border p-2 rounded mb-2">
+    <input id="pwd" type="password" placeholder="密码" class="w-full border p-2 rounded mb-4">
+    <button onclick="login()" class="bg-blue-600 text-white w-full p-2 rounded">登录</button>
+    <button onclick="register()" class="mt-2 bg-gray-200 w-full p-2 rounded">注册</button>
+  </div>
+  <div id="chat" class="hidden">
+    <div class="bg-white p-4 rounded-xl shadow">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="font-bold text-lg">在线聊天</h2>
+        <button onclick="logout()" class="text-sm text-red-500">退出登录</button>
+      </div>
+      <div id="msgList" class="h-80 overflow-y-auto border rounded p-3 mb-3 bg-gray-50"></div>
+      <div class="flex gap-2">
+        <input id="msgInput" placeholder="输入消息..." class="flex-1 border p-2 rounded">
+        <button onclick="sendMsg()" class="bg-blue-600 text-white px-4 rounded">发送</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA4ZpK0xZbXxuE50I0nVQkOaH7Y1z9wF7M",
+  authDomain: "public-chat-demo-374707.firebaseapp.com",
+  databaseURL: "https://public-chat-demo-374707-default-rtdb.asia-southeast1.firebasedatabase.app/",
+  projectId: "public-chat-demo-374707",
+  storageBucket: "public-chat-demo-374707.appspot.com",
+  messagingSenderId: "1097900296292",
+  appId: "1:1097900296292:web:1f8d4a7c0e2b9d78f6c7f1"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+let currentUser;
+function login(){const e=document.getElementById("email").value,t=document.getElementById("pwd").value;auth.signInWithEmailAndPassword(e,t).then(()=>{alert("登录成功")}).catch(e=>alert(e.message))}
+function register(){const e=document.getElementById("email").value,t=document.getElementById("pwd").value;auth.createUserWithEmailAndPassword(e,t).then(()=>{alert("注册成功！请登录")}).catch(e=>alert(e.message))}
+function logout(){auth.signOut()}
+function sendMsg(){const e=document.getElementById("msgInput").value.trim();if(!e||!currentUser)return;db.ref("messages").push({user:currentUser.email,text:e,time:new Date.toLocaleString}),document.getElementById("msgInput").value=""}
+auth.onAuthStateChanged(e=>{currentUser=e,e?(document.getElementById("auth").classList.add("hidden"),document.getElementById("chat").classList.remove("hidden"),loadMsg()):(document.getElementById("auth").classList.remove("hidden"),document.getElementById("chat").classList.add("hidden"))});
+function loadMsg(){const e=document.getElementById("msgList");db.ref("messages").on("value",t=>{e.innerHTML="";const n=t.val();if(!n)return;Object.values(n).forEach(t=>{const n=document.createElement("div");n.className="mb-2 p-2 bg-white rounded shadow-sm",n.innerHTML=`\n        <div class="text-xs text-gray-500">${t.user}</div>\n        <div class="text-sm">${t.text}</div>\n        <div class="text-xs text-gray-400 text-right">${t.time}</div>\n      `,e.appendChild(n)}),e.scrollTop=e.scrollHeight})}
+</script>
+</body>
+</html>
