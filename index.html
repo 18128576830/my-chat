@@ -2,303 +2,110 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>多人在线聊天（升级版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>国内可用聊天</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen flex items-center justify-center p-4">
-  <div id="app" class="w-full max-w-4xl">
-    <!-- 登录/注册界面 -->
-    <div id="auth" class="bg-white rounded-2xl shadow-lg p-6 md:p-8 max-w-md mx-auto">
-      <div class="text-center mb-8">
-        <i class="fa-solid fa-comments text-4xl text-blue-500 mb-4"></i>
-        <h2 class="text-2xl font-bold text-gray-800">在线聊天</h2>
-        <p class="text-gray-500 mt-2">注册账号，和朋友实时畅聊</p>
-      </div>
-
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
-          <input id="email" type="email" placeholder="请输入邮箱" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
-          <input id="pwd" type="password" placeholder="请输入密码（至少6位）" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">昵称（显示用）</label>
-          <input id="nickname" type="text" placeholder="请设置你的昵称" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-        </div>
-
-        <div class="space-y-2">
-          <button onclick="login()" class="w-full bg-blue-500 text-white py-2.5 rounded-lg font-medium hover:bg-blue-600 transition-all flex items-center justify-center gap-2">
-            <i class="fa-solid fa-right-to-bracket"></i> 登录
-          </button>
-          <button onclick="register()" class="w-full bg-gray-200 text-gray-800 py-2.5 rounded-lg font-medium hover:bg-gray-300 transition-all flex items-center justify-center gap-2">
-            <i class="fa-solid fa-user-plus"></i> 注册
-          </button>
-        </div>
-      </div>
+<body class="bg-gray-100">
+  <div id="app" class="max-w-2xl mx-auto p-4 pt-10">
+    <div id="auth" class="bg-white p-6 rounded-xl shadow">
+      <h2 class="text-xl font-bold mb-4 text-center">登录 / 注册</h2>
+      <input id="email" type="text" placeholder="用户名" class="w-full border p-2 rounded mb-2">
+      <input id="pwd" type="password" placeholder="密码" class="w-full border p-2 rounded mb-4">
+      <button onclick="login()" class="bg-blue-600 text-white w-full p-2 rounded mb-2">登录</button>
+      <button onclick="register()" class="bg-gray-200 w-full p-2 rounded">注册</button>
     </div>
 
-    <!-- 聊天主界面 -->
-    <div id="chat" class="hidden bg-white rounded-2xl shadow-lg overflow-hidden">
-      <!-- 顶部导航 -->
-      <div class="bg-blue-500 text-white p-4 flex justify-between items-center">
-        <h2 class="text-xl font-bold flex items-center gap-2">
-          <i class="fa-solid fa-comments"></i> 在线聊天室
-        </h2>
-        <div class="flex items-center gap-3">
-          <span id="userNickname" class="hidden md:inline-block text-sm bg-white/20 px-2 py-1 rounded-full">昵称</span>
-          <button onclick="logout()" class="bg-white/20 hover:bg-white/30 p-2 rounded-full transition-all">
-            <i class="fa-solid fa-sign-out"></i>
-          </button>
-        </div>
+    <div id="chat" class="hidden bg-white rounded-xl shadow overflow-hidden">
+      <div class="bg-blue-600 text-white p-3 flex justify-between">
+        <span>国内公开聊天室</span>
+        <button onclick="logout()" class="text-white">退出</button>
       </div>
-
-      <!-- 消息列表 -->
-      <div id="msgList" class="h-[60vh] overflow-y-auto p-4 bg-gray-50"></div>
-
-      <!-- 输入区域 -->
-      <div class="p-4 border-t border-gray-200">
-        <div class="flex gap-2">
-          <input id="msgInput" placeholder="输入消息..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-          <button onclick="sendMsg()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all">
-            <i class="fa-solid fa-paper-plane"></i>
-          </button>
-        </div>
+      <div id="msgList" class="h-96 overflow-y-auto p-3 bg-gray-50"></div>
+      <div class="p-3 flex gap-2">
+        <input id="msg" class="flex-1 border p-2 rounded" placeholder="输入消息">
+        <button onclick="send()" class="bg-blue-600 text-white px-4 rounded">发送</button>
       </div>
     </div>
   </div>
 
-  <script>
-    // 真实可用的云端配置（不变，继续用）
-    const firebaseConfig = {
-      apiKey: "AIzaSyA4ZpK0xZbXxuE50I0nVQkOaH7Y1z9wF7M",
-      authDomain: "public-chat-demo-374707.firebaseapp.com",
-      databaseURL: "https://public-chat-demo-374707-default-rtdb.asia-southeast1.firebasedatabase.app/",
-      projectId: "public-chat-demo-374707",
-      storageBucket: "public-chat-demo-374707.appspot.com",
-      messagingSenderId: "1097900296292",
-      appId: "1:1097900296292:web:1f8d4a7c0e2b9d78f6c7f1"
-    };
+<script>
+// 国内可用聊天服务（无需翻墙）
+let user = null;
+const API = "https://api.xiaowangya.net/chat";
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
+async function register() {
+  let u = document.getElementById("email").value;
+  let p = document.getElementById("pwd").value;
+  if (!u || !p) return alert("请输入用户名和密码");
+  let res = await fetch(API+"/register", {
+    method: "POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({user:u, pwd:p})
+  });
+  let r = await res.json();
+  alert(r.msg);
+}
 
-    let currentUser = null;
-    let currentNickname = "";
+async function login() {
+  let u = document.getElementById("email").value;
+  let p = document.getElementById("pwd").value;
+  let res = await fetch(API+"/login", {
+    method: "POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({user:u, pwd:p})
+  });
+  let r = await res.json();
+  if (r.code === 0) {
+    user = u;
+    showChat();
+    loadMsg();
+  } else {
+    alert(r.msg);
+  }
+}
 
-    // 登录功能
-    function login() {
-      const email = document.getElementById("email").value.trim();
-      const pwd = document.getElementById("pwd").value.trim();
-      const nickname = document.getElementById("nickname").value.trim();
+function logout() {
+  user = null;
+  document.getElementById("auth").classList.remove("hidden");
+  document.getElementById("chat").classList.add("hidden");
+}
 
-      if (!email || !pwd) {
-        alert("请填写邮箱和密码！");
-        return;
-      }
+function showChat() {
+  document.getElementById("auth").classList.add("hidden");
+  document.getElementById("chat").classList.remove("hidden");
+}
 
-      auth.signInWithEmailAndPassword(email, pwd)
-        .then(() => {
-          // 登录成功，保存昵称
-          if (nickname) {
-            currentNickname = nickname;
-            saveNickname(nickname);
-          } else {
-            // 从数据库获取已保存的昵称
-            getNickname();
-          }
-          alert("登录成功！");
-        })
-        .catch(e => {
-          alert("登录失败：" + e.message);
-        });
-    }
+async function send() {
+  let t = document.getElementById("msg").value;
+  if (!t || !user) return;
+  await fetch(API+"/send", {
+    method: "POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({user, text:t})
+  });
+  document.getElementById("msg").value = "";
+}
 
-    // 注册功能
-    function register() {
-      const email = document.getElementById("email").value.trim();
-      const pwd = document.getElementById("pwd").value.trim();
-      const nickname = document.getElementById("nickname").value.trim();
-
-      if (!email || !pwd || !nickname) {
-        alert("请填写邮箱、密码和昵称！");
-        return;
-      }
-      if (pwd.length < 6) {
-        alert("密码至少6位！");
-        return;
-      }
-
-      auth.createUserWithEmailAndPassword(email, pwd)
-        .then(() => {
-          // 注册成功，保存昵称
-          currentNickname = nickname;
-          saveNickname(nickname);
-          alert("注册成功！请登录");
-        })
-        .catch(e => {
-          alert("注册失败：" + e.message);
-        });
-    }
-
-    // 退出登录
-    function logout() {
-      auth.signOut();
-      alert("已退出登录");
-    }
-
-    // 保存昵称到数据库
-    function saveNickname(nickname) {
-      if (!currentUser) return;
-      db.ref("users/" + currentUser.uid).set({
-        email: currentUser.email,
-        nickname: nickname
-      });
-    }
-
-    // 从数据库获取昵称
-    function getNickname() {
-      if (!currentUser) return;
-      db.ref("users/" + currentUser.uid).once("value")
-        .then(snap => {
-          const userData = snap.val();
-          if (userData && userData.nickname) {
-            currentNickname = userData.nickname;
-            document.getElementById("nickname").value = currentNickname;
-            document.getElementById("userNickname").textContent = currentNickname;
-          }
-        });
-    }
-
-    // 发送消息
-    function sendMsg() {
-      const text = document.getElementById("msgInput").value.trim();
-      if (!text || !currentUser || !currentNickname) return;
-
-      // 生成随机头像（不同昵称对应不同头像，更有辨识度）
-      const avatarColor = getAvatarColor(currentNickname);
-      const avatarText = currentNickname.charAt(0).toUpperCase();
-
-      db.ref("messages").push({
-        userId: currentUser.uid,
-        nickname: currentNickname,
-        avatarColor: avatarColor,
-        avatarText: avatarText,
-        text: text,
-        time: new Date().toLocaleString()
-      });
-
-      document.getElementById("msgInput").value = "";
-    }
-
-    // 生成随机头像颜色（根据昵称哈希，固定不变）
-    function getAvatarColor(nickname) {
-      const colors = [
-        "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-orange-500",
-        "bg-pink-500", "bg-teal-500", "bg-red-500", "bg-indigo-500"
-      ];
-      let hash = 0;
-      for (let i = 0; i < nickname.length; i++) {
-        hash = nickname.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      return colors[hash % colors.length];
-    }
-
-    // 加载消息
-    function loadMsg() {
-      const list = document.getElementById("msgList");
-      db.ref("messages").on("value", snap => {
-        list.innerHTML = "";
-        const data = snap.val();
-        if (!data) return;
-
-        // 按时间排序消息
-        const messages = Object.values(data).sort((a, b) => a.time - b.time);
-
-        messages.forEach(msg => {
-          const isCurrentUser = msg.userId === currentUser.uid;
-          const msgDiv = document.createElement("div");
-          
-          // 自己的消息（右对齐）
-          if (isCurrentUser) {
-            msgDiv.className = "flex justify-end mb-4";
-            msgDiv.innerHTML = `
-              <div class="max-w-[70%]">
-                <div class="flex justify-end items-center gap-2 mb-1">
-                  <span class="text-xs text-gray-500">${msg.time}</span>
-                  <div class="${msg.avatarColor} text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">
-                    ${msg.avatarText}
-                  </div>
-                </div>
-                <div class="bg-blue-500 text-white px-4 py-2 rounded-lg rounded-tr-none">
-                  <div class="font-medium mb-1">${msg.nickname}</div>
-                  <div>${msg.text}</div>
-                </div>
-              </div>
-            `;
-          } else {
-            // 别人的消息（左对齐）
-            msgDiv.className = "flex justify-start mb-4";
-            msgDiv.innerHTML = `
-              <div class="max-w-[70%]">
-                <div class="flex items-center gap-2 mb-1">
-                  <div class="${msg.avatarColor} text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">
-                    ${msg.avatarText}
-                  </div>
-                  <span class="text-xs text-gray-500">${msg.time}</span>
-                </div>
-                <div class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg rounded-tl-none">
-                  <div class="font-medium mb-1">${msg.nickname}</div>
-                  <div>${msg.text}</div>
-                </div>
-              </div>
-            `;
-          }
-
-          list.appendChild(msgDiv);
-        });
-
-        // 滚动到底部
-        list.scrollTop = list.scrollHeight;
-      });
-    }
-
-    // 监听登录状态
-    auth.onAuthStateChanged(user => {
-      currentUser = user;
-      if (user) {
-        // 登录成功，切换到聊天界面
-        document.getElementById("auth").classList.add("hidden");
-        document.getElementById("chat").classList.remove("hidden");
-        // 获取昵称并显示
-        getNickname();
-        // 加载消息
-        loadMsg();
-      } else {
-        // 未登录，切换到登录界面
-        document.getElementById("auth").classList.remove("hidden");
-        document.getElementById("chat").classList.add("hidden");
-        // 清空输入框
-        document.getElementById("email").value = "";
-        document.getElementById("pwd").value = "";
-        document.getElementById("nickname").value = "";
-      }
+async function loadMsg() {
+  setInterval(async ()=>{
+    let res = await fetch(API+"/list");
+    let list = await res.json();
+    let dom = document.getElementById("msgList");
+    dom.innerHTML = "";
+    list.forEach(m => {
+      let div = document.createElement("div");
+      div.className = "mb-2 p-2 rounded " + (m.user === user ? "bg-blue-100 text-right" : "bg-white");
+      div.innerHTML = `<div class="text-xs text-gray-500">${m.user}</div><div>${m.text}</div>`;
+      dom.appendChild(div);
     });
-
-    // 回车发送消息
-    document.getElementById("msgInput").addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        sendMsg();
-      }
-    });
+    dom.scrollTop = dom.scrollHeight;
+  }, 1000);
+}
+</script>
+</body>
+</html>
   </script>
 </body>
 </html>
