@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>微信聊天室</title>
+<title>微信聊天室（全球互通）</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#EBEBEB;padding:10px}
@@ -19,12 +19,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .login{padding:30px;text-align:center}
 .login input{width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;margin-bottom:15px}
 .login button{width:100%;padding:12px;background:#128C7E;color:white;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
+.name{font-size:12px;color:#666;margin-bottom:4px}
 </style>
 </head>
 <body>
 
 <div class="container">
-  <div class="header">微信聊天室</div>
+  <div class="header">微信聊天室（全球互通）</div>
   <div id="login" class="login">
     <h3>输入昵称开始</h3>
     <input id="nick" placeholder="昵称">
@@ -41,48 +42,49 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 
 <script>
 let nick = "";
-const channel = "public_chat_v1";
+let ws;
+
+function connectWS() {
+  ws = new WebSocket("wss://chat-ws.eu.org");
+  ws.onopen = () => console.log("连接成功");
+
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    const box = document.getElementById("msgs");
+    
+    data.list.forEach(m => {
+      const div = document.createElement("div");
+      div.className = "msg " + (m.name === nick ? "me" : "other");
+      div.innerText = m.text;
+      box.appendChild(div);
+    });
+    
+    box.scrollTop = box.scrollHeight;
+  };
+
+  ws.onerror = () => {
+    alert("连接失败，请刷新重试");
+  };
+}
 
 function go() {
   nick = document.getElementById("nick").value.trim();
   if (!nick) return alert("请输入昵称");
   document.getElementById("login").style.display = "none";
   document.getElementById("chat").style.display = "flex";
-  start();
+  connectWS();
 }
 
-document.getElementById("send").onclick = function () {
+document.getElementById("send").onclick = () => {
   const text = document.getElementById("msg").value.trim();
-  if (!text || !nick) return;
-  
-  const data = {
-    name: nick,
-    text: text,
-    time: Date.now()
-  };
-  
-  localStorage.setItem(channel, JSON.stringify([
-    ...JSON.parse(localStorage.getItem(channel)||"[]"),
-    data
-  ]));
-  
+  if (!text || !ws || ws.readyState !== 1) return;
+  ws.send(JSON.stringify({ name: nick, text: text }));
   document.getElementById("msg").value = "";
 };
 
-function start() {
-  setInterval(() => {
-    const list = JSON.parse(localStorage.getItem(channel)||"[]");
-    const box = document.getElementById("msgs");
-    box.innerHTML = "";
-    list.forEach(m => {
-      const div = document.createElement("div");
-      div.className = "msg " + (m.name === nick ? "me" : "other");
-      div.innerText = m.text;
-      box.appendChild(div);
-    });
-    box.scrollTop = box.scrollHeight;
-  }, 800);
-}
+document.getElementById("msg").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") document.getElementById("send").onclick();
+});
 </script>
 </body>
 </html>
