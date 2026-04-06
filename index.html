@@ -1,76 +1,81 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>我的公开聊天室</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>公开聊天室</title>
 <style>
-*{box-sizing:border-box}
-body{font-family:Arial;margin:0;padding:15px;background:#f5f5f5}
-.box{max-width:600px;margin:0 auto;background:white;padding:15px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
-h2{margin-top:0}
-input,button{padding:10px;width:100%;margin-bottom:8px;border-radius:6px;border:1px solid #ddd}
-button{background:#4285f4;color:white;border:none;cursor:pointer}
-.gray{background:#eee;color:#333}
-.chat{display:none}
-.msg{padding:10px;border-radius:8px;margin-bottom:8px}
-.other{background:#eee;text-align:left}
-.me{background:#4285f4;color:white;text-align:right}
-#msgs{height:350px;overflow-y:auto;margin-bottom:10px}
+body{font-family:Arial;background:#f0f0f0;margin:0;padding:15px}
+.main{max-width:500px;margin:auto;background:white;padding:15px;border-radius:10px}
+#chat{display:none}
+#msgs{height:350px;background:#f9f9f9;padding:10px;border-radius:8px;overflow-y:auto;margin-bottom:10px}
+.msg{margin:5px 0;padding:8px 12px;border-radius:8px}
+.other{background:#eaeaea}
+.me{background:#007bff;color:white;text-align:right}
+input,button{width:100%;padding:10px;margin:5px 0;border-radius:8px;border:1px solid #ccc}
+button{background:#007bff;color:white;border:none}
 </style>
 </head>
+
 <body>
-<div class="box">
-  <div id="login">
-    <h2>登录 / 注册</h2>
-    <input id="user" placeholder="输入昵称（直接当账号用）">
-    <input id="pwd" type="password" placeholder="输入密码">
-    <button onclick="login()">进入聊天室</button>
+<div class="main">
+  <div id="namePage">
+    <h3>输入昵称开始聊天</h3>
+    <input id="nick" placeholder="输入你的昵称">
+    <button onclick="go()">进入聊天室</button>
   </div>
 
-  <div class="chat" id="chat">
-    <h3>公共聊天室</h3>
+  <div id="chat">
     <div id="msgs"></div>
-    <input id="msg" placeholder="输入消息...">
+    <input id="msg" placeholder="输入消息">
     <button onclick="send()">发送</button>
-    <button class="gray" onclick="logout()">退出</button>
+    <button onclick="logout()">退出</button>
   </div>
 </div>
 
 <script>
-let me = null;
-const ws = new WebSocket("wss://chat-ws.eu.org");
+let nick = "";
+const s = "https://api.yuchang123.com/chat";
 
-ws.onmessage = (e) => {
-  const list = document.getElementById("msgs");
-  const data = JSON.parse(e.data);
-  if (data.type === "init") return;
-  const div = document.createElement("div");
-  div.className = data.user === me ? "msg me" : "msg other";
-  div.innerText = data.user + "：" + data.msg;
-  list.appendChild(div);
-  list.scrollTop = list.scrollHeight;
-};
-
-function login() {
-  const user = document.getElementById("user").value.trim();
-  if (!user) return alert("请输入昵称");
-  me = user;
-  document.getElementById("login").style.display = "none";
+async function go() {
+  nick = document.getElementById("nick").value.trim();
+  if (!nick) return alert("请输入昵称");
+  document.getElementById("namePage").style.display = "none";
   document.getElementById("chat").style.display = "block";
+  start();
 }
 
 function logout() {
-  me = null;
-  document.getElementById("login").style.display = "block";
+  nick = "";
+  document.getElementById("namePage").style.display = "block";
   document.getElementById("chat").style.display = "none";
 }
 
-function send() {
-  const msg = document.getElementById("msg").value.trim();
-  if (!me || !msg) return;
-  ws.send(JSON.stringify({ user: me, msg: msg }));
+async function send() {
+  let txt = document.getElementById("msg").value.trim();
+  if (!txt || !nick) return;
+  await fetch(s + "/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: nick, text: txt })
+  });
   document.getElementById("msg").value = "";
+}
+
+function start() {
+  setInterval(async () => {
+    let res = await fetch(s + "/list");
+    let list = await res.json();
+    let ms = document.getElementById("msgs");
+    ms.innerHTML = "";
+    list.forEach(m => {
+      let div = document.createElement("div");
+      div.className = m.name === nick ? "msg me" : "msg other";
+      div.innerText = m.name + "：" + m.text;
+      ms.appendChild(div);
+    });
+    ms.scrollTop = ms.scrollHeight;
+  }, 1000);
 }
 </script>
 </body>
