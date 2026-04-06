@@ -3,179 +3,85 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>微信风格聊天室</title>
+<title>微信聊天室</title>
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #EBEBEB;
-  padding: 10px;
-}
-.container {
-  max-width: 450px;
-  margin: 0 auto;
-  background: #fff;
-  height: calc(100vh - 20px);
-  border-radius: 15px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.1);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.header {
-  background: #128C7E;
-  color: white;
-  text-align: center;
-  padding: 14px;
-  font-weight: bold;
-  font-size: 16px;
-}
-.chat-box {
-  flex: 1;
-  padding: 15px;
-  background: #E5DDD5;
-  overflow-y: auto;
-}
-.input-bar {
-  display: flex;
-  padding: 10px;
-  background: white;
-  border-top: 1px solid #eee;
-}
-.input-bar input {
-  flex: 1;
-  border: none;
-  outline: none;
-  padding: 12px 15px;
-  border-radius: 25px;
-  background: #F1F1F1;
-  font-size: 15px;
-}
-.input-bar button {
-  margin-left: 10px;
-  border: none;
-  background: #128C7E;
-  color: white;
-  padding: 12px 18px;
-  border-radius: 25px;
-  font-weight: bold;
-  cursor: pointer;
-}
-.msg {
-  margin-bottom: 12px;
-  max-width: 70%;
-  padding: 8px 12px;
-  border-radius: 12px;
-  font-size: 15px;
-  line-height: 1.4;
-}
-.me {
-  background: #DCF8C6;
-  margin-left: auto;
-  border-bottom-right-radius: 4px;
-}
-.other {
-  background: white;
-  margin-right: auto;
-  border-bottom-left-radius: 4px;
-}
-.login {
-  padding: 30px 20px;
-  text-align: center;
-}
-.login h3 {
-  margin-bottom: 20px;
-  color: #333;
-}
-.login input {
-  width: 100%;
-  padding: 12px 15px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  margin-bottom: 15px;
-  font-size: 15px;
-}
-.login button {
-  width: 100%;
-  padding: 12px;
-  background: #128C7E;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#EBEBEB;padding:10px}
+.container{max-width:450px;margin:0 auto;background:#fff;height:calc(100vh - 20px);border-radius:15px;display:flex;flex-direction:column;overflow:hidden}
+.header{background:#128C7E;color:white;text-align:center;padding:14px;font-weight:bold}
+.chat-box{flex:1;padding:15px;background:#E5DDD5;overflow-y:auto}
+.input-bar{display:flex;padding:10px;background:white;border-top:1px solid #eee}
+.input-bar input{flex:1;border:none;outline:none;padding:12px 15px;border-radius:25px;background:#F1F1F1}
+.input-bar button{margin-left:10px;border:none;background:#128C7E;color:white;padding:12px 18px;border-radius:25px;font-weight:bold;cursor:pointer}
+.msg{margin-bottom:12px;max-width:70%;padding:8px 12px;border-radius:12px}
+.me{background:#DCF8C6;margin-left:auto;border-bottom-right-radius:4px}
+.other{background:white;margin-right:auto;border-bottom-left-radius:4px}
+.login{padding:30px;text-align:center}
+.login input{width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;margin-bottom:15px}
+.login button{width:100%;padding:12px;background:#128C7E;color:white;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
 </style>
 </head>
-
 <body>
+
 <div class="container">
-  <div class="header">微信风格聊天室</div>
-
+  <div class="header">微信聊天室</div>
   <div id="login" class="login">
-    <h3>输入昵称开始聊天</h3>
-    <input id="nick" placeholder="请输入你的昵称">
-    <button onclick="start()">进入聊天</button>
+    <h3>输入昵称开始</h3>
+    <input id="nick" placeholder="昵称">
+    <button onclick="go()">进入</button>
   </div>
-
-  <div id="chat" style="display:none; flex:1; flex-direction:column">
+  <div id="chat" style="display:none;flex:1;flex-direction:column">
     <div class="chat-box" id="msgs"></div>
     <div class="input-bar">
       <input id="msg" placeholder="输入消息...">
-      <button id="sendBtn">发送</button>
+      <button id="send">发送</button>
     </div>
   </div>
 </div>
 
 <script>
 let nick = "";
-const api = "https://chat.api.mnchat.cn";
+const channel = "public_chat_v1";
 
-function start() {
+function go() {
   nick = document.getElementById("nick").value.trim();
   if (!nick) return alert("请输入昵称");
   document.getElementById("login").style.display = "none";
   document.getElementById("chat").style.display = "flex";
-  loadMsg();
+  start();
 }
 
-document.getElementById("sendBtn").onclick = async function () {
-  let text = document.getElementById("msg").value.trim();
+document.getElementById("send").onclick = function () {
+  const text = document.getElementById("msg").value.trim();
   if (!text || !nick) return;
-
-  try {
-    await fetch(api + "/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: nick, text })
-    });
-    document.getElementById("msg").value = "";
-  } catch (e) {
-    alert("发送失败");
-  }
+  
+  const data = {
+    name: nick,
+    text: text,
+    time: Date.now()
+  };
+  
+  localStorage.setItem(channel, JSON.stringify([
+    ...JSON.parse(localStorage.getItem(channel)||"[]"),
+    data
+  ]));
+  
+  document.getElementById("msg").value = "";
 };
 
-function loadMsg() {
-  setInterval(async () => {
-    try {
-      let res = await fetch(api + "/list");
-      let list = await res.json();
-      let box = document.getElementById("msgs");
-      box.innerHTML = "";
-      list.forEach(m => {
-        let div = document.createElement("div");
-        div.className = "msg " + (m.name === nick ? "me" : "other");
-        div.innerText = m.text;
-        box.appendChild(div);
-      });
-      box.scrollTop = box.scrollHeight;
-    } catch (e) {}
-  }, 1000);
+function start() {
+  setInterval(() => {
+    const list = JSON.parse(localStorage.getItem(channel)||"[]");
+    const box = document.getElementById("msgs");
+    box.innerHTML = "";
+    list.forEach(m => {
+      const div = document.createElement("div");
+      div.className = "msg " + (m.name === nick ? "me" : "other");
+      div.innerText = m.text;
+      box.appendChild(div);
+    });
+    box.scrollTop = box.scrollHeight;
+  }, 800);
 }
 </script>
 </body>
