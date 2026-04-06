@@ -1,111 +1,77 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>国内可用聊天</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的公开聊天室</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial;margin:0;padding:15px;background:#f5f5f5}
+.box{max-width:600px;margin:0 auto;background:white;padding:15px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
+h2{margin-top:0}
+input,button{padding:10px;width:100%;margin-bottom:8px;border-radius:6px;border:1px solid #ddd}
+button{background:#4285f4;color:white;border:none;cursor:pointer}
+.gray{background:#eee;color:#333}
+.chat{display:none}
+.msg{padding:10px;border-radius:8px;margin-bottom:8px}
+.other{background:#eee;text-align:left}
+.me{background:#4285f4;color:white;text-align:right}
+#msgs{height:350px;overflow-y:auto;margin-bottom:10px}
+</style>
 </head>
-<body class="bg-gray-100">
-  <div id="app" class="max-w-2xl mx-auto p-4 pt-10">
-    <div id="auth" class="bg-white p-6 rounded-xl shadow">
-      <h2 class="text-xl font-bold mb-4 text-center">登录 / 注册</h2>
-      <input id="email" type="text" placeholder="用户名" class="w-full border p-2 rounded mb-2">
-      <input id="pwd" type="password" placeholder="密码" class="w-full border p-2 rounded mb-4">
-      <button onclick="login()" class="bg-blue-600 text-white w-full p-2 rounded mb-2">登录</button>
-      <button onclick="register()" class="bg-gray-200 w-full p-2 rounded">注册</button>
-    </div>
-
-    <div id="chat" class="hidden bg-white rounded-xl shadow overflow-hidden">
-      <div class="bg-blue-600 text-white p-3 flex justify-between">
-        <span>国内公开聊天室</span>
-        <button onclick="logout()" class="text-white">退出</button>
-      </div>
-      <div id="msgList" class="h-96 overflow-y-auto p-3 bg-gray-50"></div>
-      <div class="p-3 flex gap-2">
-        <input id="msg" class="flex-1 border p-2 rounded" placeholder="输入消息">
-        <button onclick="send()" class="bg-blue-600 text-white px-4 rounded">发送</button>
-      </div>
-    </div>
+<body>
+<div class="box">
+  <div id="login">
+    <h2>登录 / 注册</h2>
+    <input id="user" placeholder="输入昵称（直接当账号用）">
+    <input id="pwd" type="password" placeholder="输入密码">
+    <button onclick="login()">进入聊天室</button>
   </div>
 
+  <div class="chat" id="chat">
+    <h3>公共聊天室</h3>
+    <div id="msgs"></div>
+    <input id="msg" placeholder="输入消息...">
+    <button onclick="send()">发送</button>
+    <button class="gray" onclick="logout()">退出</button>
+  </div>
+</div>
+
 <script>
-// 国内可用聊天服务（无需翻墙）
-let user = null;
-const API = "https://api.xiaowangya.net/chat";
+let me = null;
+const ws = new WebSocket("wss://chat-ws.eu.org");
 
-async function register() {
-  let u = document.getElementById("email").value;
-  let p = document.getElementById("pwd").value;
-  if (!u || !p) return alert("请输入用户名和密码");
-  let res = await fetch(API+"/register", {
-    method: "POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({user:u, pwd:p})
-  });
-  let r = await res.json();
-  alert(r.msg);
-}
+ws.onmessage = (e) => {
+  const list = document.getElementById("msgs");
+  const data = JSON.parse(e.data);
+  if (data.type === "init") return;
+  const div = document.createElement("div");
+  div.className = data.user === me ? "msg me" : "msg other";
+  div.innerText = data.user + "：" + data.msg;
+  list.appendChild(div);
+  list.scrollTop = list.scrollHeight;
+};
 
-async function login() {
-  let u = document.getElementById("email").value;
-  let p = document.getElementById("pwd").value;
-  let res = await fetch(API+"/login", {
-    method: "POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({user:u, pwd:p})
-  });
-  let r = await res.json();
-  if (r.code === 0) {
-    user = u;
-    showChat();
-    loadMsg();
-  } else {
-    alert(r.msg);
-  }
+function login() {
+  const user = document.getElementById("user").value.trim();
+  if (!user) return alert("请输入昵称");
+  me = user;
+  document.getElementById("login").style.display = "none";
+  document.getElementById("chat").style.display = "block";
 }
 
 function logout() {
-  user = null;
-  document.getElementById("auth").classList.remove("hidden");
-  document.getElementById("chat").classList.add("hidden");
+  me = null;
+  document.getElementById("login").style.display = "block";
+  document.getElementById("chat").style.display = "none";
 }
 
-function showChat() {
-  document.getElementById("auth").classList.add("hidden");
-  document.getElementById("chat").classList.remove("hidden");
-}
-
-async function send() {
-  let t = document.getElementById("msg").value;
-  if (!t || !user) return;
-  await fetch(API+"/send", {
-    method: "POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({user, text:t})
-  });
+function send() {
+  const msg = document.getElementById("msg").value.trim();
+  if (!me || !msg) return;
+  ws.send(JSON.stringify({ user: me, msg: msg }));
   document.getElementById("msg").value = "";
 }
-
-async function loadMsg() {
-  setInterval(async ()=>{
-    let res = await fetch(API+"/list");
-    let list = await res.json();
-    let dom = document.getElementById("msgList");
-    dom.innerHTML = "";
-    list.forEach(m => {
-      let div = document.createElement("div");
-      div.className = "mb-2 p-2 rounded " + (m.user === user ? "bg-blue-100 text-right" : "bg-white");
-      div.innerHTML = `<div class="text-xs text-gray-500">${m.user}</div><div>${m.text}</div>`;
-      dom.appendChild(div);
-    });
-    dom.scrollTop = dom.scrollHeight;
-  }, 1000);
-}
 </script>
-</body>
-</html>
-  </script>
 </body>
 </html>
