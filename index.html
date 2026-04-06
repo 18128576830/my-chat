@@ -51,14 +51,13 @@ function connectWS() {
   ws.onmessage = (e) => {
     const data = JSON.parse(e.data);
     const box = document.getElementById("msgs");
-    
+    box.innerHTML = "";
     data.list.forEach(m => {
       const div = document.createElement("div");
       div.className = "msg " + (m.name === nick ? "me" : "other");
       div.innerText = m.text;
       box.appendChild(div);
     });
-    
     box.scrollTop = box.scrollHeight;
   };
 
